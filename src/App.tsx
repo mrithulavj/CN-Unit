@@ -179,6 +179,12 @@ export default function App() {
   // Diagnostic Scenario State
   const [selectedFaultId, setSelectedFaultId] = useState<string>('phys');
 
+  // Interactive Understanding Check State
+  const [mcqSelections, setMcqSelections] = useState<Record<number, number>>({});
+  const [selectedMatchLeft, setSelectedMatchLeft] = useState<string | null>(null);
+  const [matchPairs, setMatchPairs] = useState<Record<string, string>>({});
+  const [showMatchResults, setShowMatchResults] = useState<boolean>(false);
+
   // Auto-play transit path
   useEffect(() => {
     let timer: any;
@@ -355,6 +361,22 @@ export default function App() {
             >
               Diagnostic Lab
             </button>
+            <button
+              onClick={() => setActiveSection('checks')}
+              className={`transition-colors hover:text-slate-900 ${
+                activeSection === 'checks' ? 'text-rose-600 font-bold' : ''
+              }`}
+            >
+              Check Understanding
+            </button>
+            <button
+              onClick={() => setActiveSection('guardrails')}
+              className={`transition-colors hover:text-slate-900 ${
+                activeSection === 'guardrails' ? 'text-rose-600 font-bold' : ''
+              }`}
+            >
+              Guardrails
+            </button>
           </nav>
 
           {/* Zone 3: Action & Progress */}
@@ -408,6 +430,18 @@ export default function App() {
             className={`whitespace-nowrap ${activeSection === 'diagnostic' ? 'text-rose-600 font-bold' : ''}`}
           >
             Diagnostic
+          </button>
+          <button
+            onClick={() => setActiveSection('checks')}
+            className={`whitespace-nowrap ${activeSection === 'checks' ? 'text-rose-600 font-bold' : ''}`}
+          >
+            Checks
+          </button>
+          <button
+            onClick={() => setActiveSection('guardrails')}
+            className={`whitespace-nowrap ${activeSection === 'guardrails' ? 'text-rose-600 font-bold' : ''}`}
+          >
+            Guardrails
           </button>
         </div>
       </header>
@@ -1372,6 +1406,496 @@ export default function App() {
                     the data, the failure is almost always localized to Layer 2 (Data Link framing/checksums).
                   </span>
                 </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ========================================================================= */}
+        {/* 7. INTERACTIVE UNDERSTANDING CHECKS (MCQS & MATCH THE FOLLOWING) */}
+        {/* ========================================================================= */}
+        <section id="checks" className="flex flex-col gap-6 scroll-mt-20">
+          <div className="flex flex-col gap-1">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+              Active Learning Evaluation
+            </span>
+            <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
+              Interactive Understanding Checks
+            </h2>
+            <p className="text-sm text-slate-600">
+              Test your grasp of the Netflix network journey. Apply Unit 1 concepts to real-world scenarios through
+              scenario-grounded multiple-choice questions and an interactive matching challenge.
+            </p>
+          </div>
+
+          {/* PART A: SCENARIO-GROUNDED MCQS */}
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 flex flex-col gap-6 shadow-sm">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div>
+                <h3 className="text-base font-bold text-slate-900">Scenario-Based Conceptual Questions</h3>
+                <span className="text-xs text-slate-500">Select an answer to reveal immediate engineering feedback</span>
+              </div>
+              <span className="text-xs font-semibold px-2.5 py-1 bg-slate-100 text-slate-700 rounded-md">
+                4 Scenarios
+              </span>
+            </div>
+
+            <div className="flex flex-col gap-6">
+              {[
+                {
+                  id: 0,
+                  scenario: 'Scenario 1: Network Failure Isolation',
+                  question:
+                    'You click Play on Netflix. The Wi-Fi icon indicates "Connected" with -42 dBm signal strength. Diagnostics reveal that raw bits are received by your laptop’s network adapter, but the OS network stack drops every single packet before IP processing because the 32-bit CRC check fails. At which layer is the failure located?',
+                  options: [
+                    'Layer 1: Physical Layer',
+                    'Layer 2: Data Link Layer',
+                    'Layer 3: Network Layer',
+                    'Layer 4: Transport Layer'
+                  ],
+                  correct: 1,
+                  explanation:
+                    'Layer 1 successfully captured the electromagnetic bitstream from the medium. The failure is isolated to Layer 2 (Data Link), which is responsible for frame delimiting and CRC/FCS integrity verification. Corrupted frames are discarded before Layer 3 can ever inspect them.'
+                },
+                {
+                  id: 1,
+                  scenario: 'Scenario 2: Addressing Domains',
+                  question:
+                    'Why does the hostel floor switch forward frames using 48-bit MAC addresses, while the campus border router forwards packets using 32-bit IP addresses?',
+                  options: [
+                    'MAC addresses are faster to calculate with optical lasers than IP addresses.',
+                    'Switches operate within a single local flat broadcast domain (LAN); routers interconnect distinct networks across a hierarchical global address space.',
+                    'Switches only function over copper cables, whereas routers only function over wireless radio frequencies.',
+                    'IP addresses cannot be stored in hardware RAM memory.'
+                  ],
+                  correct: 1,
+                  explanation:
+                    'Layer 2 MAC addresses are flat physical hardware identifiers designed strictly for local link delivery inside a single LAN. Layer 3 IP addresses are logically organized and hierarchical (network prefix + host ID), allowing routers to scale globally without needing to know every device’s hardware MAC address.'
+                },
+                {
+                  id: 2,
+                  scenario: 'Scenario 3: Modulation & Medium',
+                  question:
+                    'Why cannot your hostel router send native digital electrical square pulses directly across the ISP’s long-distance coaxial or telephone cable without a Modem?',
+                  options: [
+                    'Digital square pulses contain infinite high-frequency harmonics that attenuate and distort rapidly; the modem modulates digital bits onto analog continuous carrier waves suited for analog media.',
+                    'Modems are only required to encrypt passwords using TLS/SSL.',
+                    'The ISP’s optical cables can only accept human-readable ASCII text files.',
+                    'Routers do not possess electrical power converters.'
+                  ],
+                  correct: 0,
+                  explanation:
+                    'Discrete digital square pulses with sharp transitions degrade and disperse quickly over long physical transmission lines. A MODEM (Modulator/Demodulator) modulates discrete digital data onto analog sinusoidal carrier waves (using QAM, PSK, or FSK) matched to the channel’s frequency characteristics, and demodulates them upon arrival.'
+                },
+                {
+                  id: 3,
+                  scenario: 'Scenario 4: Signal Encoding Trade-Offs',
+                  question:
+                    'Early Ethernet standardized Manchester encoding instead of standard NRZ-L. What critical engineering benefit did Manchester provide, and what penalty did it incur?',
+                  options: [
+                    'Manchester tripled data throughput but increased CPU operating temperature.',
+                    'Manchester guaranteed a mid-bit transition for automatic clock synchronization and zero DC drift, at the cost of doubling the required signal baud rate (bandwidth).',
+                    'Manchester eliminated the need for Ethernet cables completely.',
+                    'Manchester allowed radio waves to pass through solid concrete barriers without attenuation.'
+                  ],
+                  correct: 1,
+                  explanation:
+                    'NRZ-L suffers from receiver clock drift and DC baseline wander during long sequences of 0s or 1s. Manchester guarantees a voltage transition in the exact middle of every bit, allowing continuous clock recovery with zero net DC bias, but requires 2 signal changes per bit (baud rate = 2 × bit rate), doubling the required frequency bandwidth.'
+                }
+              ].map((mcq) => {
+                const selected = mcqSelections[mcq.id];
+                const isAnswered = selected !== undefined;
+                return (
+                  <div key={mcq.id} className="p-5 rounded-xl border border-slate-200 bg-slate-50/40 flex flex-col gap-3">
+                    <div>
+                      <span className="text-[11px] font-bold text-rose-600 uppercase tracking-wider">
+                        {mcq.scenario}
+                      </span>
+                      <p className="text-sm font-semibold text-slate-900 mt-1">{mcq.question}</p>
+                    </div>
+
+                    {/* Options Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
+                      {mcq.options.map((opt, optIdx) => {
+                        const isChosen = selected === optIdx;
+                        const isCorrectOpt = optIdx === mcq.correct;
+                        let btnStyle = 'bg-white border-slate-200 text-slate-700 hover:border-slate-300';
+
+                        if (isAnswered) {
+                          if (isCorrectOpt) {
+                            btnStyle = 'bg-emerald-50 border-emerald-400 text-emerald-900 font-semibold';
+                          } else if (isChosen && !isCorrectOpt) {
+                            btnStyle = 'bg-rose-50 border-rose-400 text-rose-900 line-through';
+                          } else {
+                            btnStyle = 'bg-white/60 border-slate-200 text-slate-400 opacity-60';
+                          }
+                        }
+
+                        return (
+                          <button
+                            key={optIdx}
+                            disabled={isAnswered}
+                            onClick={() => setMcqSelections((prev) => ({ ...prev, [mcq.id]: optIdx }))}
+                            className={`p-3 rounded-lg border text-left text-xs transition-all flex items-start gap-2.5 ${btnStyle}`}
+                          >
+                            <span className="w-5 h-5 rounded-full border border-current flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">
+                              {String.fromCharCode(65 + optIdx)}
+                            </span>
+                            <span className="leading-snug">{opt}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Explanation Box */}
+                    {isAnswered && (
+                      <div
+                        className={`p-3.5 rounded-lg border text-xs leading-relaxed mt-2 ${
+                          selected === mcq.correct
+                            ? 'bg-emerald-50/70 border-emerald-200 text-emerald-900'
+                            : 'bg-rose-50/70 border-rose-200 text-rose-900'
+                        }`}
+                      >
+                        <strong className="block mb-1">
+                          {selected === mcq.correct ? '✓ Correct Deduction' : '✗ Review the Concept'}
+                        </strong>
+                        <p>{mcq.explanation}</p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* PART B: INTERACTIVE MATCH THE FOLLOWING */}
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 flex flex-col gap-6 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+              <div>
+                <h3 className="text-base font-bold text-slate-900">Interactive Matching: Architecture to Netflix Reality</h3>
+                <p className="text-xs text-slate-500">
+                  Click a network element on the left, then click its corresponding real-world responsibility on the right.
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setMatchPairs({});
+                  setSelectedMatchLeft(null);
+                  setShowMatchResults(false);
+                }}
+                className="self-start sm:self-auto text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
+              >
+                Reset Matching
+              </button>
+            </div>
+
+            {/* Matching Playground */}
+            {(() => {
+              const LEFT_ITEMS = [
+                { id: 'modem', label: '1. Modem (Modulator / Demodulator)' },
+                { id: 'switch', label: '2. Layer 2 Switch' },
+                { id: 'router', label: '3. Layer 3 Router' },
+                { id: 'gateway', label: '4. Application Gateway' },
+                { id: 'edge', label: '5. Network Edge' },
+                { id: 'media', label: '6. Transmission Media' }
+              ];
+
+              const RIGHT_ITEMS = [
+                {
+                  id: 'A',
+                  desc: 'Connects devices within the hostel LAN and forwards frames using 48-bit MAC addresses'
+                },
+                {
+                  id: 'B',
+                  desc: 'Converts digital discrete square pulses to/from analog carrier waves for ISP lines'
+                },
+                {
+                  id: 'C',
+                  desc: 'Connects disparate networks and routes packets between subnets using IP addresses'
+                },
+                {
+                  id: 'D',
+                  desc: 'Physical optical glass fiber or 5GHz radio waves carrying electromagnetic wave signals'
+                },
+                {
+                  id: 'E',
+                  desc: 'Translates data between fundamentally differing protocol architectures or format domains'
+                },
+                {
+                  id: 'F',
+                  desc: 'End systems (hostel laptop & Netflix OCA server) where applications originate and terminate'
+                }
+              ];
+
+              const CORRECT_MAP: Record<string, string> = {
+                modem: 'B',
+                switch: 'A',
+                router: 'C',
+                gateway: 'E',
+                edge: 'F',
+                media: 'D'
+              };
+
+              const allMatched = Object.keys(matchPairs).length === LEFT_ITEMS.length;
+
+              return (
+                <div className="flex flex-col gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Left Column (Items) */}
+                    <div className="flex flex-col gap-2.5">
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                        Unit 1 Architectural Element
+                      </span>
+                      {LEFT_ITEMS.map((item) => {
+                        const isSelected = selectedMatchLeft === item.id;
+                        const pairedRightId = matchPairs[item.id];
+                        const isPaired = pairedRightId !== undefined;
+                        const isCorrect = isPaired && CORRECT_MAP[item.id] === pairedRightId;
+
+                        return (
+                          <button
+                            key={item.id}
+                            onClick={() => {
+                              if (isSelected) {
+                                setSelectedMatchLeft(null);
+                              } else {
+                                setSelectedMatchLeft(item.id);
+                              }
+                            }}
+                            className={`p-3 rounded-xl border text-left text-xs transition-all flex items-center justify-between ${
+                              isSelected
+                                ? 'border-rose-500 bg-rose-50 ring-2 ring-rose-200 text-rose-900 font-semibold'
+                                : isPaired
+                                ? showMatchResults
+                                  ? isCorrect
+                                    ? 'border-emerald-300 bg-emerald-50 text-emerald-900'
+                                    : 'border-rose-300 bg-rose-50 text-rose-900'
+                                  : 'border-slate-800 bg-slate-900 text-white font-medium'
+                                : 'border-slate-200 bg-white hover:border-slate-300 text-slate-800'
+                            }`}
+                          >
+                            <span>{item.label}</span>
+                            {isPaired && (
+                              <span
+                                className={`text-[10px] font-mono px-2 py-0.5 rounded ${
+                                  isSelected ? 'bg-rose-200 text-rose-900' : 'bg-slate-800 text-slate-200'
+                                }`}
+                              >
+                                Linked → [{pairedRightId}]
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Right Column (Definitions/Roles) */}
+                    <div className="flex flex-col gap-2.5">
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                        Real-World Netflix Role / Mechanism
+                      </span>
+                      {RIGHT_ITEMS.map((item) => {
+                        const linkedLeftId = Object.keys(matchPairs).find((k) => matchPairs[k] === item.id);
+                        const isUsed = linkedLeftId !== undefined;
+
+                        return (
+                          <button
+                            key={item.id}
+                            onClick={() => {
+                              if (selectedMatchLeft) {
+                                setMatchPairs((prev) => ({
+                                  ...prev,
+                                  [selectedMatchLeft]: item.id
+                                }));
+                                setSelectedMatchLeft(null);
+                              } else if (linkedLeftId) {
+                                // Unpair
+                                const updated = { ...matchPairs };
+                                delete updated[linkedLeftId];
+                                setMatchPairs(updated);
+                              }
+                            }}
+                            className={`p-3 rounded-xl border text-left text-xs transition-all flex items-start gap-2.5 ${
+                              isUsed
+                                ? 'border-slate-700 bg-slate-50 text-slate-900 font-medium'
+                                : selectedMatchLeft
+                                ? 'border-dashed border-rose-300 bg-white hover:bg-rose-50/40 text-slate-700 cursor-pointer'
+                                : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+                            }`}
+                          >
+                            <span className="w-5 h-5 rounded-full bg-slate-100 border border-slate-300 flex items-center justify-center font-bold text-[10px] shrink-0 text-slate-700 mt-0.5">
+                              {item.id}
+                            </span>
+                            <span className="leading-relaxed flex-1">{item.desc}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Submission & Feedback Bar */}
+                  <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-slate-800">
+                        Matched: {Object.keys(matchPairs).length} of {LEFT_ITEMS.length} items
+                      </span>
+                      {allMatched && !showMatchResults && (
+                        <span className="text-rose-600 font-bold">· Ready for evaluation</span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        disabled={!allMatched}
+                        onClick={() => setShowMatchResults(true)}
+                        className="px-4 py-2 rounded-lg font-semibold bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-40 transition-colors shadow-sm"
+                      >
+                        Verify Matches
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Results Banner */}
+                  {showMatchResults && (
+                    <div
+                      className={`p-4 rounded-xl border text-xs leading-relaxed ${
+                        Object.keys(matchPairs).every((k) => CORRECT_MAP[k] === matchPairs[k])
+                          ? 'bg-emerald-50 border-emerald-300 text-emerald-900'
+                          : 'bg-amber-50 border-amber-300 text-amber-900'
+                      }`}
+                    >
+                      <strong className="block mb-1 font-bold text-sm">
+                        {Object.keys(matchPairs).every((k) => CORRECT_MAP[k] === matchPairs[k])
+                          ? '✓ Perfect Architectural Mapping!'
+                          : 'Some Pairs Need Adjustment'}
+                      </strong>
+                      <p>
+                        Correct pairing alignment: 1-Modem → [B] Analog Carrier Modulation; 2-Switch → [A] Local MAC
+                        Forwarding; 3-Router → [C] Inter-Network IP Routing; 4-Gateway → [E] Protocol Translation;
+                        5-Network Edge → [F] Laptop & Netflix OCA; 6-Transmission Media → [D] Fiber & 5GHz Radio Waves.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+          </div>
+        </section>
+
+        {/* ========================================================================= */}
+        {/* 8. HYPOTHETICAL CASE STUDY GUARDRAILS & PEDAGOGICAL BOUNDARIES */}
+        {/* ========================================================================= */}
+        <section id="guardrails" className="flex flex-col gap-6 scroll-mt-20">
+          <div className="flex flex-col gap-1">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+              Academic Context & Scope
+            </span>
+            <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
+              Case Study Guardrails & Real-World Reality
+            </h2>
+            <p className="text-sm text-slate-600">
+              Because this module translates industrial streaming infrastructure into a pedagogical case study
+              for Unit 1, understand what is simplified for conceptual clarity versus how production networks operate.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Guardrail 1: Encryption & DRM */}
+            <div className="bg-white p-6 rounded-2xl border border-slate-200 flex flex-col gap-3 shadow-sm">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-800">
+                  <ShieldCheck className="w-4 h-4 text-rose-600" />
+                </div>
+                <h3 className="text-sm font-bold text-slate-900">1. End-to-End Encryption & DRM</h3>
+              </div>
+              <div className="text-xs text-slate-600 leading-relaxed space-y-2">
+                <p>
+                  <strong>Case Study Simplification:</strong> We conceptually inspect HTTP GET requests and video chunk
+                  manifest URLs as plain text so students can visualize payloads.
+                </p>
+                <p>
+                  <strong>Real-World Guardrail:</strong> In reality, all Netflix video packets are encrypted end-to-end via
+                  TLS 1.3 (port 443), and the video streams are protected with Encrypted Media Extensions (Google Widevine
+                  or Apple FairPlay). Intermediate switches and core routers never inspect or tamper with video frames—they
+                  strictly process the outer IP header.
+                </p>
+              </div>
+            </div>
+
+            {/* Guardrail 2: Open Connect Edge Caching */}
+            <div className="bg-white p-6 rounded-2xl border border-slate-200 flex flex-col gap-3 shadow-sm">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-800">
+                  <Server className="w-4 h-4 text-rose-600" />
+                </div>
+                <h3 className="text-sm font-bold text-slate-900">2. Open Connect Appliance (OCA) Direct Peering</h3>
+              </div>
+              <div className="text-xs text-slate-600 leading-relaxed space-y-2">
+                <p>
+                  <strong>Case Study Simplification:</strong> We depict the packet journey crossing trans-continental ISP
+                  optical fiber to illustrate the Network Core.
+                </p>
+                <p>
+                  <strong>Real-World Guardrail:</strong> In production, over 95% of Netflix traffic never traverses the
+                  global core. Netflix installs Open Connect Appliance (OCA) server clusters directly inside your local ISP’s
+                  metropolitan data center or regional Internet Exchange Point (IXP). Your request stays within your city’s
+                  fiber ring.
+                </p>
+              </div>
+            </div>
+
+            {/* Guardrail 3: Private Addressing & NAT */}
+            <div className="bg-white p-6 rounded-2xl border border-slate-200 flex flex-col gap-3 shadow-sm">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-800">
+                  <Network className="w-4 h-4 text-rose-600" />
+                </div>
+                <h3 className="text-sm font-bold text-slate-900">3. Private Addressing & NAT (RFC 1918)</h3>
+              </div>
+              <div className="text-xs text-slate-600 leading-relaxed space-y-2">
+                <p>
+                  <strong>Case Study Simplification:</strong> Illustrated as direct source-to-destination IP packet forwarding.
+                </p>
+                <p>
+                  <strong>Real-World Guardrail:</strong> Your hostel laptop does not possess a globally routable public IPv4
+                  address. It holds a private address (e.g. <code className="font-mono text-[11px] text-slate-800">192.168.1.42</code>
+                  ). The campus gateway router performs Network Address Translation (NAT or CGNAT), mapping hundreds of students
+                  to a single public IP and managing stateful connection tables, or relies on IPv6 dual-stack.
+                </p>
+              </div>
+            </div>
+
+            {/* Guardrail 4: Adaptive Bitrate Streaming (ABR) */}
+            <div className="bg-white p-6 rounded-2xl border border-slate-200 flex flex-col gap-3 shadow-sm">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-800">
+                  <Activity className="w-4 h-4 text-rose-600" />
+                </div>
+                <h3 className="text-sm font-bold text-slate-900">4. Dynamic Adaptive Bitrate Streaming</h3>
+              </div>
+              <div className="text-xs text-slate-600 leading-relaxed space-y-2">
+                <p>
+                  <strong>Case Study Simplification:</strong> Treated as an individual chunk retrieval.
+                </p>
+                <p>
+                  <strong>Real-World Guardrail:</strong> Netflix never streams a static file. Video is segmented into
+                  discrete 2-to-6 second chunks encoded at varying bitrates (from 240p up to 4K HDR). The client player
+                  dynamically samples TCP throughput and buffer state, seamlessly stepping down to 720p during hostel Wi-Fi
+                  congestion rather than dropping the connection.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Scope Statement Banner */}
+          <div className="p-5 rounded-2xl bg-slate-900 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <Info className="w-5 h-5 text-rose-400 shrink-0" />
+              <div className="text-xs leading-relaxed text-slate-300">
+                <strong className="text-white block mb-0.5">Unit 1 Educational Scope Boundary:</strong>
+                This case study deliberately isolates introductory concepts (Edge/Core, Nodes/Links, Media, Modems,
+                Topologies, Signal Encoding, and 5-Layer vs 7-Layer OSI models). Advanced mechanics (BGP route flapping,
+                TCP BBR congestion control, QUIC 0-RTT handshakes, and MPLS traffic engineering) are covered in later units.
               </div>
             </div>
           </div>
